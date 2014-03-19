@@ -1,18 +1,11 @@
 # -*- coding: utf-8 -*-
-#from django.views.generic import TemplateView, FormView, ListView
-#from django.views.generic.edit import ProcessFormView, FormMixin
-#from django import forms
+
 from django.views.decorators.csrf import csrf_exempt, csrf_protect, requires_csrf_token
-from django.http import HttpResponseRedirect, HttpResponse, HttpResponseNotAllowed
-#from django.core.context_processors import csrf
-
-#from django.template.context import RequestContext# Context
+from django.http import HttpResponseRedirect, HttpResponse, HttpResponseNotAllowed, Http404
 from django.utils.translation import ugettext_lazy as _
-#from django.db.models import Q
-
-from django.http import Http404
 
 from Patcher.models import Soft,Version,File
+from Patcher.forms import FileForm
 
 def get(request,*args,**kwargs):
     k_soft    = kwargs.get('soft')
@@ -46,10 +39,39 @@ def push(request,*args,**kwargs):
     k_minor   = int(request.POST.get('minor'))
     k_patch   = int(request.POST.get('patch'))
     k_os      = request.POST.get('os')
-    k_bit     = request.POST.get('bit')
+    k_bit     = int(request.POST.get('bit'))
     k_file    = request.FILES.get("file")
 
+    form = FileForm(request.POST,request.FILES)
+    if not form.is_valid() or None in (k_soft,k_major,k_minor,k_patch,k_os,k_bit,k_file):
+        return HttpResponseNotAllowed('Informations are wrong')
+
     filename  = k_file.name
+
+    soft = Soft.objects.filter(slug=k_soft)[:1]
+    if not soft:
+        return HttpResponseNotAllowed('Informations are wrong')
+    soft = soft[0]
+
+    number = Version.version_to_number(k_major,k_minor,k_patch)
+    version = Version.objects.filter(soft=soft,
+                                     number__gte=number,
+                                     os=k_os,
+                                     bit=k_bit)[:1]
+    if not version:
+        version = Version(soft=soft,
+                           number=number,
+                           os=k_os,
+                           bit=k_bit)
+        version.save()
+    else:
+        version = version[0]
+
+    if File.objects.filter(version=version,file=k_file.name).count() > 0:
+        return HttpResponseNotAllowed('Informations are wrong')
+
+    f = File(version=version,file=k_file)
+    f.save()
     return HttpResponse('{"push"}',content_type='application/json')
 
 
