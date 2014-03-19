@@ -67,7 +67,7 @@ def push(request,*args,**kwargs):
     else:
         version = version[0]
 
-    if File.objects.filter(version=version,file=k_file.name).count() > 0:
+    if File.objects.filter(version=version,file__endswith=k_file).count() > 0:
         return HttpResponseNotAllowed('Informations are wrong')
 
     f = File(version=version,file=k_file)
