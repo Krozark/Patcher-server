@@ -2,7 +2,8 @@
 #from django.views.generic import TemplateView, FormView, ListView
 #from django.views.generic.edit import ProcessFormView, FormMixin
 #from django import forms
-from django.http import HttpResponseRedirect, HttpResponse
+from django.views.decorators.csrf import csrf_exempt, csrf_protect, requires_csrf_token
+from django.http import HttpResponseRedirect, HttpResponse, HttpResponseNotAllowed
 #from django.core.context_processors import csrf
 
 #from django.template.context import RequestContext# Context
@@ -35,9 +36,20 @@ def get(request,*args,**kwargs):
     print "get",args,kwargs
     return HttpResponse('{"get"}',content_type='application/json')
 
-
+@csrf_exempt
 def push(request,*args,**kwargs):
-    print request,"push",args,kwargs
+    if request.method != 'POST':
+        return HttpResponseNotAllowed('Only POST here')
+
+    k_soft    = request.POST.get('soft')
+    k_major   = int(request.POST.get('major'))
+    k_minor   = int(request.POST.get('minor'))
+    k_patch   = int(request.POST.get('patch'))
+    k_os      = request.POST.get('os')
+    k_bit     = request.POST.get('bit')
+    k_file    = request.FILES.get("file")
+
+    filename  = k_file.name
     return HttpResponse('{"push"}',content_type='application/json')
 
 

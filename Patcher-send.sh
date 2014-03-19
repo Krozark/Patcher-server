@@ -18,5 +18,5 @@ for lib in $libs
 do
     path=`ldconfig --print-cache |grep $lib | sed 's/=>/|/g' |cut -d"|" -f2 |head -n 1 | xargs readlink -m`
     echo "$lib : $path"
-    curl -F "file=@$path" -F"soft=$1" -F"os=$os" -F "bit=$bit" -F "major=$major" -F "minor=minor" -F "patch=$patch" -L "$2/patcher/push/" > "out.html"
+    curl -F "file=@$path" -F"soft=$1" -F"os=$os" -F "bit=$bit" -F "major=$major" -F "minor=$minor" -F "patch=$patch" -L "$2/patcher/push/" > "/dev/null"
 done
