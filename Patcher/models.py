@@ -37,12 +37,12 @@ class Version(models.Model):
         return u"%s-%s-x%d.%d.%d.%d" % (self.soft.slug,self.os,self.bit,major,minor,patch)
 
 class File(models.Model):
-    def get_upload_dir(self,filename):
+    def get_upload_filename(self,filename):
         (major,minor,patch) = self.version.get_version()
         return "%s/%d.%d.%d/%s-x%d/%s" % (self.version.soft.slug,major,minor,patch,self.version.os,self.version.bit,filename)
 
     version = models.ForeignKey(Version)
-    file    = models.FileField(_("File"),upload_to=get_upload_dir)
+    file    = models.FileField(_("File"),upload_to=get_upload_filename)
     action  = models.IntegerField(_("Action"),choices=[(0,"unknow"),(1,"New"),(2,"Maj"),(3,"Deleted")],default=0)
 
 
