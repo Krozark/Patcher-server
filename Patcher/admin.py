@@ -15,7 +15,7 @@ class VersionAdmin(admin.ModelAdmin):
 admin.site.register(Version,VersionAdmin)
 
 class FileAdmin(admin.ModelAdmin):
-    list_display = ("file","version",)
-    list_filter = ("version",)
+    list_display = ("filename","file","version","action")
+    list_filter = ("filename","version","action")
 admin.site.register(File,FileAdmin)
 

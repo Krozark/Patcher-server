@@ -3,6 +3,7 @@
 from django.views.decorators.csrf import csrf_exempt, csrf_protect, requires_csrf_token
 from django.http import HttpResponseRedirect, HttpResponse, HttpResponseNotAllowed, Http404
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.auth import authenticate
 
 from Patcher.models import Soft,Version,File
 from Patcher.forms import FileForm
@@ -32,46 +33,74 @@ def get(request,*args,**kwargs):
 @csrf_exempt
 def push(request,*args,**kwargs):
     if request.method != 'POST':
-        return HttpResponseNotAllowed('Only POST here')
+        return HttpResponse('Only POST here')
 
-    k_soft    = request.POST.get('soft')
-    k_major   = int(request.POST.get('major'))
-    k_minor   = int(request.POST.get('minor'))
-    k_patch   = int(request.POST.get('patch'))
-    k_os      = request.POST.get('os')
-    k_bit     = int(request.POST.get('bit'))
-    k_file    = request.FILES.get("file")
+    k_soft      = request.POST.get('soft')
+    k_major     = int(request.POST.get('major'))
+    k_minor     = int(request.POST.get('minor'))
+    k_patch     = int(request.POST.get('patch'))
+    k_os        = request.POST.get('os')
+    k_bit       = int(request.POST.get('bit'))
+    k_file      = request.FILES.get("file")
+    k_filename  = request.POST.get('filename')
+    k_user      = request.POST.get('user')
+    k_pass      = request.POST.get('pass')
+    k_main      = bool(request.POST.get('main'))
 
-    form = FileForm(request.POST,request.FILES)
-    if not form.is_valid() or None in (k_soft,k_major,k_minor,k_patch,k_os,k_bit,k_file):
-        return HttpResponseNotAllowed('Informations are wrong')
+    #params
+    if None in (k_soft,k_major,k_minor,k_patch,k_os,k_bit,k_filename,k_user,k_pass):
+        return HttpResponse('Informations are wrong')
 
-    filename  = k_file.name
+    #user
+    user = authenticate(username=k_user, password=k_pass)
+    if user is None or not user.is_active:
+        return HttpResponse('Wrong user/pass')
+    if not user.is_superuser:
+        return HttpResponse('Wrong user')
 
+    #soft
     soft = Soft.objects.filter(slug=k_soft)[:1]
     if not soft:
-        return HttpResponseNotAllowed('Informations are wrong')
+        return HttpResponse('Soft does not exist')
     soft = soft[0]
 
+    #version
     number = Version.version_to_number(k_major,k_minor,k_patch)
-    version = Version.objects.filter(soft=soft,
-                                     number__gte=number,
-                                     os=k_os,
-                                     bit=k_bit)[:1]
+    if Version.objects.filter(soft=soft,number__gt=number,os=k_os,bit=k_bit).count() > 0:
+        return HttpResponse('A newer version exist of this soft')
+
+    version = Version.objects.filter(soft=soft,number=number,os=k_os,bit=k_bit)[:1]
     if not version:
-        version = Version(soft=soft,
-                           number=number,
-                           os=k_os,
-                           bit=k_bit)
+        version = Version(soft=soft,number=number,os=k_os,bit=k_bit)
         version.save()
     else:
         version = version[0]
 
-    if File.objects.filter(version=version,file__endswith=k_file).count() > 0:
-        return HttpResponseNotAllowed('Informations are wrong')
+    #files
+    form = FileForm(request.POST,request.FILES)
+    if not form.is_valid():
+        return HttpResponse('Wrong file')
+    
+    files = File.objects.filter(version=version,filename=k_filename)
+    if files.count() > 0:
+        return HttpResponse('File already exist')
 
-    f = File(version=version,file=k_file)
+    action = 0
+    if not k_file:
+        action = 3 #delete
+    else:
+        files = File.objects.filter(version__soft=version.soft,filename=k_filename)
+        if not files:
+            action = 1 #new
+        else:
+            action = 1 #maj
+            if not k_main:
+                files = files.filter(file__endwith=k_file.name)
+                if files:
+                    return HttpResponse('File already exist in other version')
+
+    f = File(version=version,filename=k_filename,file=k_file,action=action)
     f.save()
-    return HttpResponse('{"push"}',content_type='application/json')
+    return HttpResponse('File added"')
 
 

@@ -42,7 +42,8 @@ class File(models.Model):
         return "%s/%d.%d.%d/%s-x%d/%s" % (self.version.soft.slug,major,minor,patch,self.version.os,self.version.bit,filename)
 
     version = models.ForeignKey(Version)
-    file    = models.FileField(_("File"),upload_to=get_upload_filename)
+    filename = models.CharField(_("Filename"),max_length=255)
+    file    = models.FileField(_("File"),upload_to=get_upload_filename,blank=True,null=True)
     action  = models.IntegerField(_("Action"),choices=[(0,"unknow"),(1,"New"),(2,"Maj"),(3,"Deleted")],default=0)
 
 
