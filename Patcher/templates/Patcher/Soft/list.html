@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block page.title %} Softs {% endblock %}
+
+{% block page.body %}
+<ul class="patcher-soft-list">
+{% for object in object_list %}
+<li><a href="{{object.get_absolute_url}}">{{object}}</a></li>
+{% endfor %}
+</ul>
+{% endblock %}

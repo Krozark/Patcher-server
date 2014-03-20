@@ -8,6 +8,7 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect, requires_csr
 from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth import authenticate
+from django.views.generic import ListView
 
 from Patcher.models import Soft,Version,File
 from Patcher.forms import FileForm
@@ -149,5 +150,27 @@ def push(request,*args,**kwargs):
     f = File(version=version,filename=k_filename,file=k_file,action=action)
     f.save()
     return HttpResponse('File added')
+
+
+class SoftListAllView(ListView):
+    template_name = "Patcher/Soft/list.html"
+    model   = Soft
+
+    def get_template_names(self):
+        names = []
+        names.append(self.template_name)
+        return names
+    
+class VersionListView(ListView):
+    template_name = "Patcher/Version/list.html"
+    model   = Version
+
+    def get_template_names(self):
+        names = []
+        names.append(self.template_name)
+        return names
+
+    def get_queryset(self,*args,**kwargs):
+        return Version.objects.filter(soft__slug=self.kwargs['soft'])
 
 
