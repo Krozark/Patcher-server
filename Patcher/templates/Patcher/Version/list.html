@@ -3,9 +3,24 @@
 {% block page.title %} Versions {% endblock %}
 
 {% block page.body %}
-<ul class="patcher-version-list">
-{% for object in object_list %}
-<li><span class="btn"><a href="{{object.get_download_url}}">Télécharger</a></span> {{object}}</li>
-{% endfor %}
-</ul>
+<table class="patcher-version-table">
+    <tr>
+        <td>Soft</td>
+        <td>Version</td>
+        <td>Os</td>
+        <td>Bit</td>
+        <td>Ajout</td>
+        <td>Télécharger</td>
+    </tr>
+    {% for object in object_list %}
+    <tr>
+        <td>{{object.soft}}</td>
+        <td>{{object.version}}</td>
+        <td>{{object.os}}</td>
+        <td>{{object.bit}}</td>
+        <td>{{object.created}}</td>
+        <td><span class="btn"><a href="{{object.get_download_url}}">Télécharger</a></span></td>
+    </tr>
+    {% endfor %}
+</table>
 {% endblock %}

@@ -33,6 +33,11 @@ class Version(models.Model):
     class Meta:
         ordering = ["os","bit","soft","-number"]
 
+    @property
+    def version(self):
+        (major,minor,patch) = self.get_version()
+        return "%d.%d.%d" % (major,minor,patch)
+
 
     def get_version(self):
         major = self.number / (100*100)
