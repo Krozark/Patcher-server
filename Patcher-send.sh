@@ -1,7 +1,13 @@
 #!/bin/bash
 
 out="out.txt"
-gen-requirement.sh $1 /tmp/requirement.txt
+in="/tmp/requirement.txt"
+if [[ -z $3 ]]
+then
+    gen-requirement.sh $1 /tmp/requirement.txt
+else
+    cat $3 > $in
+fi
 
 read -e -p "User:" user
 read -es -p "Password:" pass
@@ -10,8 +16,8 @@ echo "Connect to $2 using user: $user" > $out
 
 url=$2
 
-libs=`cat /tmp/requirement.txt | grep -E ^lib |sed 's/==/\.so\./g'`
-version=`cat /tmp/requirement.txt |grep MyPackage== | tr -s '=' |cut -d= -f2`
+libs=`cat $in | grep -E ^lib |sed 's/==/\.so\./g'`
+version=`cat $in |grep MyPackage== | tr -s '=' |cut -d= -f2`
 
 major=`echo $version |cut -d. -f1`
 minor=`echo $version |cut -d. -f2`
