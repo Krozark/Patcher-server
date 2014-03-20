@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
 
+import os
+import zipfile
+import StringIO
+
 from django.views.decorators.csrf import csrf_exempt, csrf_protect, requires_csrf_token
-from django.http import HttpResponseRedirect, HttpResponse, HttpResponseNotAllowed, Http404
+from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth import authenticate
 
 from Patcher.models import Soft,Version,File
 from Patcher.forms import FileForm
+
 
 def get(request,*args,**kwargs):
     k_soft    = kwargs.get('soft')
@@ -24,11 +29,53 @@ def get(request,*args,**kwargs):
     number = k_patch + (k_minor + (k_major*100))*100
     version = Version.objects.filter(number=number,soft=soft,os=k_os,bit=k_bit)[:1]
 
-    print soft,number,version
-    Version.objects.filter(number__gt=version)
+    if not version:
+        raise Http404
+    version = version[0]
 
-    print "get",args,kwargs
-    return HttpResponse('{"get"}',content_type='application/json')
+    files = File.objects.filter(version__soft__name="harpe-client",version__number__lte=number).order_by("filename","-version__number")
+    # Files (local path) to put in the .zip
+    filenames = []
+
+    for f in files:
+        add = True
+        for x in filenames:
+            if x.filename == f.filename:
+                add = False
+                break
+        if add and f.action != 3:
+            filenames.append(f)
+    
+    # Folder name in ZIP archive which contains the above files
+    # E.g [thearchive.zip]/somefiles/file2.txt
+    # FIXME: Set this to something better
+    zip_subdir = "%s" % version
+    zip_filename = "%s.zip" % zip_subdir
+
+    # Open StringIO to grab in-memory ZIP contents
+    s = StringIO.StringIO()
+
+    # The zip compressor
+    zf = zipfile.ZipFile(s, "w")
+
+    for file in filenames:
+        fpath = file.file.path
+        # Calculate path for file in zip
+        fdir, fname = os.path.split(fpath)
+        zip_path = os.path.join(zip_subdir, fname)
+
+        # Add file, at correct path
+        zf.write(fpath, zip_path)
+
+    # Must close zip for all contents to be written
+    zf.close()
+
+    # Grab ZIP file from in-memory, make response with correct MIME-type
+    resp = HttpResponse(s.getvalue(), mimetype = "application/x-zip-compressed")
+    # ..and correct content-disposition
+    resp['Content-Disposition'] = 'attachment; filename=%s' % zip_filename
+
+    return resp
 
 @csrf_exempt
 def push(request,*args,**kwargs):
@@ -95,12 +142,12 @@ def push(request,*args,**kwargs):
         else:
             action = 1 #maj
             if not k_main:
-                files = files.filter(file__endwith=k_file.name)
+                files = File.objects.filter(version__soft=version.soft,filename=k_filename,file__endswith=k_file.name)
                 if files:
                     return HttpResponse('File already exist in other version')
 
     f = File(version=version,filename=k_filename,file=k_file,action=action)
     f.save()
-    return HttpResponse('File added"')
+    return HttpResponse('File added')
 
 
