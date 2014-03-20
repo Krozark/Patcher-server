@@ -8,8 +8,9 @@ from django.core.urlresolvers import reverse
 
 
 class Soft(models.Model):
-    name    = models.CharField(_("Name"),max_length=255,unique=True)
-    slug    = models.SlugField(_("Slug"),max_length=32,unique=True)
+    name        = models.CharField(_("Name"),max_length=255,unique=True)
+    slug        = models.SlugField(_("Slug"),max_length=32,unique=True)
+    description = models.TextField(_("Descriptif"))
 
     class Meta:
         ordering = ["slug"]
@@ -23,10 +24,11 @@ class Soft(models.Model):
 class Version(models.Model):
     BIT_CHOICE = (32,64)
 
-    soft    = models.ForeignKey(Soft,null=False,blank=False)
-    number  = models.IntegerField(_("Number"),help_text=_("Format is xxxxyyzz where xxxx is the Major version, yy the minor and zz the patch"))
-    os      = models.CharField(_("os name"),max_length=128)
-    bit     = models.IntegerField(_("Bit number"),choices=[(x,x) for x in BIT_CHOICE])
+    soft        = models.ForeignKey(Soft,null=False,blank=False)
+    number      = models.IntegerField(_("Number"),help_text=_("Format is xxxxyyzz where xxxx is the Major version, yy the minor and zz the patch"))
+    os          = models.CharField(_("os name"),max_length=128)
+    bit         = models.IntegerField(_("Bit number"),choices=[(x,x) for x in BIT_CHOICE])
+    created     = models.DateTimeField(_("Created"),auto_now=True)
 
     class Meta:
         ordering = ["os","bit","soft","-number"]
@@ -60,10 +62,11 @@ class File(models.Model):
         (major,minor,patch) = self.version.get_version()
         return "%s/%d.%d.%d/%s-x%d/%s" % (self.version.soft.slug,major,minor,patch,self.version.os,self.version.bit,filename)
 
-    version = models.ForeignKey(Version)
-    filename = models.CharField(_("Filename"),max_length=255)
-    file    = models.FileField(_("File"),upload_to=get_upload_filename,blank=True,null=True)
-    action  = models.IntegerField(_("Action"),choices=[(0,"unknow"),(1,"New"),(2,"Maj"),(3,"Deleted")],default=0)
+    version     = models.ForeignKey(Version)
+    filename    = models.CharField(_("Filename"),max_length=255)
+    file        = models.FileField(_("File"),upload_to=get_upload_filename,blank=True,null=True)
+    action      = models.IntegerField(_("Action"),choices=[(0,"unknow"),(1,"New"),(2,"Maj"),(3,"Deleted")],default=0)
+    created     = models.DateTimeField(_("Created"),auto_now=True)
 
 
     def __unicode__(self):

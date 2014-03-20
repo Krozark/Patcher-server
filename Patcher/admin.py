@@ -10,12 +10,12 @@ class SoftAdmin(admin.ModelAdmin):
 admin.site.register(Soft,SoftAdmin)
 
 class VersionAdmin(admin.ModelAdmin):
-    list_display = ("number","soft","os","bit")
+    list_display = ("number","soft","os","bit","created")
     list_filter = ("number","soft","os","bit")
 admin.site.register(Version,VersionAdmin)
 
 class FileAdmin(admin.ModelAdmin):
-    list_display = ("filename","file","version","action")
+    list_display = ("filename","file","version","created","action")
     list_filter = ("version__soft","version__number","version__os","version__bit","filename","action")
 admin.site.register(File,FileAdmin)
 
