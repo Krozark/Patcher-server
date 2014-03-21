@@ -40,4 +40,4 @@ done
 path=`readlink -m $1`
 echo "== send exe file $1 (path=$path) ==" >> $out
 echo "response : ">> $out
-curl -F "user=$user" -F "pass=$pass" -F "main=true" -F "file=@$path" -F "filename=$1" -F"soft=$1" -F"os=$os" -F "bit=$bit" -F "major=$major" -F "minor=$minor" -F "patch=$patch" -L "$2/patcher/push/" >> $out
+curl -F "user=$user" -F "pass=$pass" -F "file=@$path" -F "filename=$1" -F"soft=$1" -F"os=$os" -F "bit=$bit" -F "major=$major" -F "minor=$minor" -F "patch=$patch" -L "$2/patcher/push/" >> $out
