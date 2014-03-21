@@ -34,7 +34,7 @@ def get(request,*args,**kwargs):
         raise Http404
     version = version[0]
 
-    files = File.objects.filter(version__soft__name="harpe-client",version__number__lte=number).order_by("filename","-version__number")
+    files = File.objects.filter(version__soft__name=k_soft,version__number__lte=number).order_by("filename","-version__number")
     # Files (local path) to put in the .zip
     filenames = []
 
@@ -63,7 +63,7 @@ def get(request,*args,**kwargs):
         fpath = file.file.path
         # Calculate path for file in zip
         fdir, fname = os.path.split(fpath)
-        zip_path = os.path.join(zip_subdir, fname)
+        zip_path = os.path.join(zip_subdir, file.filename)
 
         # Add file, at correct path
         zf.write(fpath, zip_path)
@@ -93,7 +93,6 @@ def push(request,*args,**kwargs):
     k_filename  = request.POST.get('filename')
     k_user      = request.POST.get('user')
     k_pass      = request.POST.get('pass')
-    k_main      = bool(request.POST.get('main'))
 
     #params
     if None in (k_soft,k_major,k_minor,k_patch,k_os,k_bit,k_filename,k_user,k_pass):
@@ -141,8 +140,9 @@ def push(request,*args,**kwargs):
         if not files:
             action = 1 #new
         else:
-            action = 1 #maj
-            if not k_main:
+            action = 2 #maj
+            print k_filename,k_soft
+            if not k_filename == k_soft:
                 files = File.objects.filter(version__soft=version.soft,filename=k_filename,file__endswith=k_file.name)
                 if files:
                     return HttpResponse('File already exist in other version')
