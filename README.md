@@ -5,8 +5,44 @@ A generic patcher system
 
 This is a django module
 
+
+Installation
+============
+
+You need to add in your settings.py
+
+    INSTALLED_APPS = (
+        'Patcher'
+    )
+
+In your urls.py
+
+    urlpatterns = patterns('',
+        url(r'^patcher/', include('Patcher.urls')),
+    )
+
+You can change "patcher" if you want.
+
+
+
 Usage
 =====
+
+
+urls
+----
+ <soft name> = [\w-]+
+ <version>   = [\d]+.[\d]+.[\d]+  (major.minor.patch)
+ <bit>   = 32 or 64
+ <os>    = [\w-]+
+ <file>  = [\w.-]+
+
+        get/<soft name>/<version>/<os>-x<bit>/(<file>)? #return a .zip with all the file for this version (if file is not empty, anly this file is send)
+        maj/<soft>/<version>/(last|<version>)/<os>-x<bit>.json #return a json with all maj to mak to go to the specified version
+        push/ #send files to the server to creat a new version. This url is only uses with Patcher-send script
+        list/ #list of all the soft
+        <soft>/list/ #list of all the version of a soft
+
 
 You also have a script to upload a new soft.
 The soft name have to existe in the database.
