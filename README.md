@@ -40,12 +40,11 @@ urls
 * \<file\>  = [\w.-]+
 
 ```Python
-
-        "get/<soft name>/<version>/<os>-x<bit>/(<file>)?" #return a .zip with all the file for this version (if file is not empty, anly this file is send)
-        "maj/<soft>/<version>/(last|<version>)/<os>-x<bit>.json" #return a json with all maj to mak to go to the specified version
-        "push/" #send files to the server to creat a new version. This url is only uses with Patcher-send script. It use post params
-        "list/" #list of all the soft
-        "<soft>/list/" #list of all the version of a soft
+"get/<soft name>/<version>/<os>-x<bit>/(<file>)?" #return a .zip with all the file for this version (if file is not empty, anly this file is send)
+"maj/<soft>/<version>/(last|<version>)/<os>-x<bit>.json" #return a json with all maj to mak to go to the specified version
+"push/" #send files to the server to creat a new version. This url is only uses with Patcher-send script. It use post params
+"list/" #list of all the soft
+"<soft>/list/" #list of all the version of a soft
 ```
 
 
