@@ -52,6 +52,7 @@ You also have a script to upload a new soft.
 The soft name have to existe in the database.
 
 usage:
+
     Patcher-send.sh <exe> <url:port> <path/to/requirement.txt>
 
 
@@ -65,7 +66,7 @@ For the script only:
 
 you can replace it by whatever you want, but the output must contain:
 
-* osName: <value>
-* osBit: <value>
+* osName: \<value\>
+* osBit: \<value\>
 
 
