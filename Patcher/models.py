@@ -75,6 +75,6 @@ class File(models.Model):
 
 
     def __unicode__(self):
-        return u"%s-%s" % (self.version,self.file)
+        return u"%s-%s" % (self.version,self.filename)
 post_delete.connect(file_cleanup, sender=File, dispatch_uid="File.file_cleanup")
 

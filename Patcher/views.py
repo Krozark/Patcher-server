@@ -12,6 +12,7 @@ from django.views.generic import ListView
 
 from Patcher.models import Soft,Version,File
 from Patcher.forms import FileForm
+from Patcher.utils import render_to_json
 
 
 def get(request,*args,**kwargs):
@@ -33,8 +34,12 @@ def get(request,*args,**kwargs):
     if not version:
         raise Http404
     version = version[0]
-
-    files = File.objects.filter(version__soft__name=k_soft,version__number__lte=number).order_by("filename","-version__number")
+    
+    
+    qs = File.objects.filter(version__soft__name=k_soft,version__number__lte=number,version__os=version.os)
+    if k_file:
+        qs = qs.filter(filename=k_file)
+    files = qs.order_by("filename","-version__number")
     # Files (local path) to put in the .zip
     filenames = []
 
@@ -51,6 +56,9 @@ def get(request,*args,**kwargs):
     # E.g [thearchive.zip]/somefiles/file2.txt
     # FIXME: Set this to something better
     zip_subdir = "%s" % version
+    if k_file:
+        zip_subdir = "%s-%s" % (k_file,zip_subdir)
+
     zip_filename = "%s.zip" % zip_subdir
 
     # Open StringIO to grab in-memory ZIP contents
@@ -77,6 +85,90 @@ def get(request,*args,**kwargs):
     resp['Content-Disposition'] = 'attachment; filename=%s' % zip_filename
 
     return resp
+
+@render_to_json()
+def maj(request,*args,**kwargs):
+    #soft
+    k_soft    = kwargs.get('soft')
+    #from
+    k_from_major   = int(kwargs.get('from_major'))
+    k_from_minor   = int(kwargs.get('from_minor'))
+    k_from_patch   = int(kwargs.get('from_patch'))
+    #to
+    k_to_key     = kwargs.get("to_key")
+    k_to_major   = int(kwargs.get('to_major') or 0)
+    k_to_minor   = int(kwargs.get('to_minor') or 0)
+    k_to_patch   = int(kwargs.get('to_patch') or 0)
+    #os
+    k_os      = kwargs.get('os')
+    k_bit     = kwargs.get('bit')
+
+    response = {"message":"all is fine",
+           "status" : 0,
+           "datas" : {}
+          }
+
+
+    from_number = k_from_patch + (k_from_minor + (k_from_major*100))*100
+    to_number = k_to_patch + (k_to_minor + (k_to_major*100))*100
+    soft = Soft.objects.filter(slug=k_soft)[:1]
+    if not soft:
+        response["message"] = "No soft find"
+        response["status"] = 1
+        return response
+
+    soft = soft[0]
+    from_version = Version.objects.filter(number=from_number,soft=soft,os=k_os,bit=k_bit)[:1]
+
+    if not from_version:
+        response["message"] = "No source version find"
+        response["status"] = 2
+        return response
+    from_version = from_version[0]
+
+    qs = Version.objects.filter(soft=soft,os=k_os,bit=k_bit)
+    if to_number > 0:
+        to_version = qs.filter(number=to_number)[:1]
+        if not to_version:
+            response["message"] = "The destination version does't exist"
+            response["status"] = 3
+            return response
+    else:
+        to_version = qs.filter(number__gt=from_number).order_by("-number")[:1]
+        if not to_version:
+            response["message"] = "Your version is the lastest"
+            response["status"] = 4
+            return response
+    to_version = to_version[0]
+    to_number = to_version.number
+
+
+    files = File.objects.filter(version__soft__name=k_soft,
+                                version__os=to_version.os,
+                                version__number__lte=to_number,
+                                version__number__gt=from_number
+                               ).order_by("filename","-version__number")
+
+    fs = []
+
+    for f in files:
+        add = True
+        for x in fs:
+            if x["filename"] == f.filename:
+                add = False
+                break
+        if add:
+            datas = {"filename" : f.filename,
+                    "action" : f.action,
+                    "action_str" : f.get_action_display()
+                   }
+            if f.file:
+                datas.update({"url" : f.file.url})
+            fs.append(datas)
+
+    response["datas"] = {"files" : fs}
+
+    return response
 
 @csrf_exempt
 def push(request,*args,**kwargs):
