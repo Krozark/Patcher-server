@@ -31,11 +31,13 @@ Usage
 
 urls
 ----
- <soft name> = [\w-]+
- <version>   = [\d]+.[\d]+.[\d]+  (major.minor.patch)
- <bit>   = 32 or 64
- <os>    = [\w-]+
- <file>  = [\w.-]+
+
+
+* \<soft name\> = [\w-]+
+* \<version\>   = [\d]+.[\d]+.[\d]+  (major.minor.patch)
+* \<bit\>   = 32 or 64
+* \<os\>    = [\w-]+
+* \<file\>  = [\w.-]+
 
         get/<soft name>/<version>/<os>-x<bit>/(<file>)? #return a .zip with all the file for this version (if file is not empty, anly this file is send)
         maj/<soft>/<version>/(last|<version>)/<os>-x<bit>.json #return a json with all maj to mak to go to the specified version
