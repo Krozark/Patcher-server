@@ -118,13 +118,13 @@ def maj(request,*args,**kwargs):
         return response
 
     soft = soft[0]
-    from_version = Version.objects.filter(number=from_number,soft=soft,os=k_os,bit=k_bit)[:1]
 
-    if not from_version:
-        response["message"] = "No source version find"
-        response["status"] = 2
-        return response
-    from_version = from_version[0]
+    if(from_number >0):
+        from_version = Version.objects.filter(number=from_number,soft=soft,os=k_os,bit=k_bit)[:1]
+        if not from_version:
+            response["message"] = "No source version find"
+            response["status"] = 2
+            return response
 
     qs = Version.objects.filter(soft=soft,os=k_os,bit=k_bit)
     if to_number > 0:
@@ -166,7 +166,10 @@ def maj(request,*args,**kwargs):
                 datas.update({"url" : f.file.url})
             fs.append(datas)
 
-    response["datas"] = {"files" : fs}
+    response["datas"] = {"version" : to_version.number,
+                         "files" : fs,
+                         "logs" : [{"msg":u.description, "version" : u.number} for u in Version.objects.filter(soft=soft,os=k_os,bit=k_bit).order_by("-number")[:10]]
+                        }
 
     return response
 

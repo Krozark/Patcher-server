@@ -29,6 +29,8 @@ class Version(models.Model):
     os          = models.CharField(_("os name"),max_length=128)
     bit         = models.IntegerField(_("Bit number"),choices=[(x,x) for x in BIT_CHOICE])
     created     = models.DateTimeField(_("Created"),auto_now=True)
+    description = models.TextField(_("Descriptif"))
+
 
     class Meta:
         ordering = ["os","bit","soft","-number"]
