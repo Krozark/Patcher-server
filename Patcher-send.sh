@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "Usage : Patcher-send.sh soft base/url/patcher/push [requirement.txt]"
+
 out="out.txt"
 in="/tmp/requirement.txt"
 if [[ -z $3 ]]
