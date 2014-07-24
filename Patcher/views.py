@@ -105,8 +105,8 @@ def maj(request,*args,**kwargs):
 
     response = {"message":"all is fine",
            "status" : 0,
-           "datas" : {}
-          }
+            "datas" : {}
+           }
 
 
     from_number = k_from_patch + (k_from_minor + (k_from_major*100))*100
@@ -118,6 +118,7 @@ def maj(request,*args,**kwargs):
         return response
 
     soft = soft[0]
+    response["datas"].update({"logs" : [{"msg":u.description, "version" : u.number} for u in Version.objects.filter(soft=soft,os=k_os,bit=k_bit).order_by("-number")[:10]]})
 
     if(from_number >0):
         from_version = Version.objects.filter(number=from_number,soft=soft,os=k_os,bit=k_bit)[:1]
@@ -127,6 +128,11 @@ def maj(request,*args,**kwargs):
             return response
 
     qs = Version.objects.filter(soft=soft,os=k_os,bit=k_bit)
+    if qs.count() <=0:
+            response["message"] = "No version for this architecture"
+            response["status"] = 5
+            return response
+
     if to_number > 0:
         to_version = qs.filter(number=to_number)[:1]
         if not to_version:
@@ -166,10 +172,9 @@ def maj(request,*args,**kwargs):
                 datas.update({"url" : f.file.url})
             fs.append(datas)
 
-    response["datas"] = {"version" : to_version.number,
+    response["datas"].update({"version" : to_version.number,
                          "files" : fs,
-                         "logs" : [{"msg":u.description, "version" : u.number} for u in Version.objects.filter(soft=soft,os=k_os,bit=k_bit).order_by("-number")[:10]]
-                        }
+                        })
 
     return response
 
